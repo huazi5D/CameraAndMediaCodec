@@ -5,8 +5,6 @@ import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import hz.cameraandmediacodec.Camera.CameraHelper;
-
 /**
  * Created by Administrator on 2017-06-27.
  */
@@ -33,13 +31,12 @@ public class VideoViewSurfaceView extends SurfaceView implements SurfaceHolder.C
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        if (mViewPreparedListener != null)
-            mViewPreparedListener.onPrepared();
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+        if (mViewPreparedListener != null)
+            mViewPreparedListener.onPrepared();
     }
 
     @Override

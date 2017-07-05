@@ -1,10 +1,12 @@
 package hz.cameraandmediacodec.Camera;
 
 import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.view.SurfaceView;
 
 import java.io.IOException;
+
+import hz.cameraandmediacodec.MediaCodec.MediaCodecHelper;
 
 /**
  * Created by Administrator on 2017-06-27.
@@ -16,29 +18,36 @@ public class CameraHelper implements Camera.PreviewCallback{
     private Camera.Parameters mParameters = null;
     private int mBufferSize = -1;
     private byte[] mBuffer;
+    private MediaCodecHelper mMediaCodecHelper;
 
     public CameraHelper() {
     }
 
-    public void startPreview(SurfaceView v) {
+    public void setMediaCodec(MediaCodecHelper mediaCodecHelper) {
+        this.mMediaCodecHelper = mediaCodecHelper;
+    }
+
+    public void startPreview(SurfaceTexture surfaceTexture) {
         try {
             mCamera = Camera.open();
 
             mParameters = mCamera.getParameters();
             mParameters.setPreviewFormat(ImageFormat.NV21);
-            /*int[] previewFpsRange = mParameters.getSupportedPreviewFpsRange().get(0);
+            int[] previewFpsRange = mParameters.getSupportedPreviewFpsRange().get(0);
             mParameters.setPreviewFpsRange(previewFpsRange[0], previewFpsRange[1]);
-            mParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);*/
+            mParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
             mCamera.setParameters(mParameters);
-            mCamera.setPreviewDisplay(v.getHolder());
+            mCamera.setPreviewTexture(surfaceTexture);
             mCamera.setDisplayOrientation(90);
 
             mBufferSize = mParameters.getPreviewSize().width * mParameters.getPreviewSize().height;
             mBufferSize *= ImageFormat.getBitsPerPixel(mParameters.getPreviewFormat()) / 8;
             mBuffer = new byte[mBufferSize];
-            mCamera.setPreviewCallbackWithBuffer(this);
 
+//            mCamera.addCallbackBuffer(mBuffer);
+            mCamera.setPreviewCallback(this);
             mCamera.startPreview();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,6 +55,9 @@ public class CameraHelper implements Camera.PreviewCallback{
 
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
-        camera.addCallbackBuffer(mBuffer);
+
+        if (mMediaCodecHelper != null)
+            mMediaCodecHelper.encode(data);
+//        camera.addCallbackBuffer(mBuffer);
     }
 }

@@ -14,67 +14,76 @@ import java.nio.ByteBuffer;
 
 public class MediaCodecHelper {
 
-    private MediaCodec mMediaCodec = null;
+    private MediaCodec mEncoder = null;
+    private MediaCodec mDecoder = null;
+
+    private boolean mEncoderIsInited = false;
+    private boolean mDecoderIsInited = false;
 
     public MediaCodecHelper() {
     }
 
-    public void initEncoder(Surface surface, int w, int h) {
+    public boolean initEncoder(int w, int h) {
         try {
-            mMediaCodec = MediaCodec.createEncoderByType("Video/avc");
+            mEncoder = MediaCodec.createEncoderByType("Video/avc");
 
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("Video/avc", w, h);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 125000);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
             mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
-            mMediaCodec.configure(mediaFormat, surface, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-            mMediaCodec.start();
+            mEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            mEncoder.start();
+            mEncoderIsInited = true;
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
     public void initDecoder(Surface surface, int w, int h) {
         try {
-            mMediaCodec = MediaCodec.createDecoderByType("Video/avc");
+            mDecoder = MediaCodec.createDecoderByType("Video/avc");
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("Video/avc", w, h);
-            mMediaCodec.configure(mediaFormat, surface, null, 0);
-            mMediaCodec.start();
+            mDecoder.configure(mediaFormat, surface, null, 0);
+            mDecoder.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void encode(byte[] buf) {
-        ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
-        ByteBuffer[] outputBuffers = mMediaCodec.getOutputBuffers();
-        int inputBufferIndex = mMediaCodec.dequeueInputBuffer(-1);
+        if (!mEncoderIsInited) return;
+
+        ByteBuffer[] inputBuffers = mEncoder.getInputBuffers();
+        ByteBuffer[] outputBuffers = mEncoder.getOutputBuffers();
+        int inputBufferIndex = mEncoder.dequeueInputBuffer(-1);
         if (inputBufferIndex >= 0) {
             ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
             inputBuffer.clear();
             inputBuffer.put(buf, 0, buf.length);
-            mMediaCodec.queueInputBuffer(inputBufferIndex, 0, buf.length, 0, 0);
+            mEncoder.queueInputBuffer(inputBufferIndex, 0, buf.length, 0, 0);
         }
         MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-        int outputBufferIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, 0);
+        int outputBufferIndex = mEncoder.dequeueOutputBuffer(bufferInfo, 0);
         while (outputBufferIndex >= 0) {
             ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
 
-            mMediaCodec.releaseOutputBuffer(outputBufferIndex, false);
-            outputBufferIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, 0);
+            mEncoder.releaseOutputBuffer(outputBufferIndex, false);
+            outputBufferIndex = mEncoder.dequeueOutputBuffer(bufferInfo, 0);
         }
     }
 
     public void decode(byte[] buf) {
-        ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
-        ByteBuffer[] outputBuffers = mMediaCodec.getOutputBuffers();
-        int inputBufferIndex = mMediaCodec.dequeueInputBuffer(-1);
+        ByteBuffer[] inputBuffers = mDecoder.getInputBuffers();
+        ByteBuffer[] outputBuffers = mDecoder.getOutputBuffers();
+        int inputBufferIndex = mDecoder.dequeueInputBuffer(-1);
         if (inputBufferIndex >= 0) {
             ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
             inputBuffer.clear();
             inputBuffer.put(buf, 0, buf.length);
-            mMediaCodec.queueInputBuffer(inputBufferIndex, 0, buf.length, 0, 0);
+            mDecoder.queueInputBuffer(inputBufferIndex, 0, buf.length, 0, 0);
         }
 
         // TO DO
