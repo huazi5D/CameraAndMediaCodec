@@ -14,6 +14,7 @@ public class MainActivity extends Activity {
     private CameraHelper mCameraHelper;
     private CameraTextrueView mCameraView, mCodecView;
     private Button mLuZhi;
+    private boolean mIsLuZhi = false;
     private MediaCodecHelper mMediaCodecHelper;
 
     @Override
@@ -28,8 +29,14 @@ public class MainActivity extends Activity {
         mLuZhi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mMediaCodecHelper.initEncoder(1080, 1920);
-                mCameraHelper.setMediaCodec(mMediaCodecHelper);
+                if (!mIsLuZhi) {
+                    mIsLuZhi = true;
+                    mMediaCodecHelper.initEncoder(1080, 1920);
+                    mCameraHelper.setMediaCodec(mMediaCodecHelper);
+                } else {
+                    mIsLuZhi = false;
+                    mMediaCodecHelper.stop();
+                }
             }
         });
 
