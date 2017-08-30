@@ -38,9 +38,9 @@ public class MediaCodecHelper {
             mEncoder = MediaCodec.createEncoderByType("Video/avc");
 
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("Video/avc", w, h);
-            mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 125000);
-            mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+            mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, w * h * 5);
+            mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
+            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
             mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
             mEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             mEncoder.start();
@@ -71,10 +71,12 @@ public class MediaCodecHelper {
         mEncoderIsInited = false;
     }
 
-    byte[] frame = new byte[1080 * 1920];
+    byte[] yuv420sp = new byte[640 * 480 * 3 / 2];
     public void encode(byte[] buf) {
         if (!mEncoderIsInited) return;
-        NV21toI420SemiPlanar(buf, frame, 1080, 1920);
+//        NV21toI420SemiPlanar(buf, frame, 640, 480);
+        NV21ToNV12(buf, yuv420sp, 640, 480);
+        buf = yuv420sp;
         ByteBuffer[] inputBuffers = mEncoder.getInputBuffers();
         ByteBuffer[] outputBuffers = mEncoder.getOutputBuffers();
         int inputBufferIndex = mEncoder.dequeueInputBuffer(-1);
@@ -116,6 +118,24 @@ public class MediaCodecHelper {
                 mEncoder.releaseOutputBuffer(outputBufferIndex, false);
             }
         }while (outputBufferIndex >= 0);
+    }
+
+    private void NV21ToNV12(byte[] nv21,byte[] nv12,int width,int height){
+        if(nv21 == null || nv12 == null)return;
+        int framesize = width*height;
+        int i = 0,j = 0;
+        System.arraycopy(nv21, 0, nv12, 0, framesize);
+        for(i = 0; i < framesize; i++){
+            nv12[i] = nv21[i];
+        }
+        for (j = 0; j < framesize/2; j+=2)
+        {
+            nv12[framesize + j-1] = nv21[j+framesize];
+        }
+        for (j = 0; j < framesize/2; j+=2)
+        {
+            nv12[framesize + j] = nv21[j+framesize-1];
+        }
     }
 
     private void NV21toI420SemiPlanar(byte[] nv21bytes, byte[] i420bytes, int width, int height) {

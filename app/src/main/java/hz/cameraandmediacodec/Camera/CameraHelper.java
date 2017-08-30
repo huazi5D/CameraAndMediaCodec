@@ -3,10 +3,14 @@ package hz.cameraandmediacodec.Camera;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.util.Log;
 
 import java.io.IOException;
+import java.util.List;
 
 import hz.cameraandmediacodec.MediaCodec.MediaCodecHelper;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by Administrator on 2017-06-27.
@@ -33,6 +37,8 @@ public class CameraHelper implements Camera.PreviewCallback{
 
             mParameters = mCamera.getParameters();
             mParameters.setPreviewFormat(ImageFormat.NV21);
+            List<Camera.Size> list = mParameters.getSupportedPreviewSizes();
+            mParameters.setPreviewSize(640, 480);
             int[] previewFpsRange = mParameters.getSupportedPreviewFpsRange().get(0);
             mParameters.setPreviewFpsRange(previewFpsRange[0], previewFpsRange[1]);
             mParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
@@ -47,6 +53,8 @@ public class CameraHelper implements Camera.PreviewCallback{
 //            mCamera.addCallbackBuffer(mBuffer);
             mCamera.setPreviewCallback(this);
             mCamera.startPreview();
+            Camera.Parameters size = mCamera.getParameters();
+            Log.d(TAG, "startPreview: ");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,4 +68,15 @@ public class CameraHelper implements Camera.PreviewCallback{
             mMediaCodecHelper.encode(data);
 //        camera.addCallbackBuffer(mBuffer);
     }
+
+    public void autoFocus() {
+        mCamera.autoFocus(new Camera.AutoFocusCallback() {
+            @Override
+            public void onAutoFocus(boolean success, Camera camera) {
+                if (success)
+                    mCamera.cancelAutoFocus();
+            }
+        });
+    }
+
 }
