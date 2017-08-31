@@ -75,7 +75,7 @@ public class MediaCodecHelper {
     public void encode(byte[] buf) {
         if (!mEncoderIsInited) return;
 //        NV21toI420SemiPlanar(buf, frame, 640, 480);
-        NV21ToNV12(buf, yuv420sp, 640, 480);
+        rotateAndToNV12(buf, yuv420sp, 640, 480);
         buf = yuv420sp;
         ByteBuffer[] inputBuffers = mEncoder.getInputBuffers();
         ByteBuffer[] outputBuffers = mEncoder.getOutputBuffers();
@@ -118,6 +118,28 @@ public class MediaCodecHelper {
                 mEncoder.releaseOutputBuffer(outputBufferIndex, false);
             }
         }while (outputBufferIndex >= 0);
+    }
+
+    private void rotateAndToNV12(byte[] nv21,byte[] nv12,int width,int height) {
+        int wh = width * height;
+        //旋转Y
+        int k = 0;
+        for(int i = 0; i < width; i++) {
+            for(int j = height - 1; j >= 0; j--)
+            {
+                nv12[k] = nv21[width * j + i];
+                k++;
+            }
+        }
+
+        for(int i = 0; i < width; i += 2) {
+            for(int j = height / 2 - 1; j >= 0; j--)
+            {
+                nv12[k] = nv21[wh + width * j + i + 1];
+                nv12[k+1] = nv21[wh+ width * j + i];
+                k+=2;
+            }
+        }
     }
 
     private void NV21ToNV12(byte[] nv21,byte[] nv12,int width,int height){

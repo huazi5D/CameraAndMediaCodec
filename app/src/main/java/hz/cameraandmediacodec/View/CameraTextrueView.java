@@ -3,7 +3,6 @@ package hz.cameraandmediacodec.View;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.TextureView;
 
 /**
@@ -53,7 +52,6 @@ public class CameraTextrueView extends TextureView implements TextureView.Surfac
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        Log.d(TAG, "onSurfaceTextureUpdated: ");
     }
 
     public SurfaceTexture getSurfaceTexture() {

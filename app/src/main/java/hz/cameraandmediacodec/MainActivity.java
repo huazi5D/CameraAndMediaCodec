@@ -41,7 +41,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void onClick(View v) {
                 if (!mIsLuZhi) {
                     mIsLuZhi = true;
-                    mMediaCodecHelper.initEncoder(640, 480);
+                    mMediaCodecHelper.initEncoder(480, 640);
                     mCameraHelper.setMediaCodec(mMediaCodecHelper);
                 } else {
                     mIsLuZhi = false;
