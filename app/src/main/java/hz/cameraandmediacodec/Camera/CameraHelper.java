@@ -11,6 +11,7 @@ import java.util.List;
 import hz.cameraandmediacodec.MediaCodec.MediaCodecHelper;
 
 import static android.content.ContentValues.TAG;
+import static hz.cameraandmediacodec.MediaCodec.MediaCodecHelper.YUVQueue;
 
 /**
  * Created by Administrator on 2017-06-27.
@@ -38,7 +39,7 @@ public class CameraHelper implements Camera.PreviewCallback{
             mParameters = mCamera.getParameters();
             mParameters.setPreviewFormat(ImageFormat.NV21);
             List<Camera.Size> list = mParameters.getSupportedPreviewSizes();
-            mParameters.setPreviewSize(640, 480);
+            mParameters.setPreviewSize(1920, 1080);
             int[] previewFpsRange = mParameters.getSupportedPreviewFpsRange().get(0);
             mParameters.setPreviewFpsRange(previewFpsRange[0], previewFpsRange[1]);
             mParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
@@ -63,10 +64,10 @@ public class CameraHelper implements Camera.PreviewCallback{
 
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
-
-        if (mMediaCodecHelper != null)
-            mMediaCodecHelper.encode(data);
-//        camera.addCallbackBuffer(mBuffer);
+        if (YUVQueue.size() >= 10) {
+            YUVQueue.poll();
+        }
+        YUVQueue.add(data);
     }
 
     public void autoFocus() {

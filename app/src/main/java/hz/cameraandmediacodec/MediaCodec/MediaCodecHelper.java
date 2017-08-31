@@ -8,6 +8,7 @@ import android.view.Surface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import hz.cameraandmediacodec.utils.SDCardUtils;
 
@@ -20,10 +21,12 @@ public class MediaCodecHelper {
     private MediaCodec mEncoder = null;
     private MediaCodec mDecoder = null;
 
-    private boolean mEncoderIsInited = false;
+    private boolean mEncoderStarted = false;
     private boolean mDecoderIsInited = false;
     private MediaMuxer mediaMuxer;
     private int trackIndex = -1;
+
+    public static ArrayBlockingQueue<byte[]> YUVQueue = new ArrayBlockingQueue<byte[]>(10);
 
     public MediaCodecHelper() {
         try {
@@ -44,9 +47,16 @@ public class MediaCodecHelper {
             mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
             mEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             mEncoder.start();
-            mEncoderIsInited = true;
+            mEncoderStarted = true;
 //            trackIndex = mediaMuxer.addTrack(mediaFormat);
 //            mediaMuxer.start();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (mEncoderStarted)
+                        encode();
+                }
+            }).start();
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,16 +76,20 @@ public class MediaCodecHelper {
     }
 
     public void stop() {
-        mediaMuxer.stop();
-        mediaMuxer.release();
-        mEncoderIsInited = false;
+        mEncoderStarted = false;
     }
 
-    byte[] yuv420sp = new byte[640 * 480 * 3 / 2];
-    public void encode(byte[] buf) {
-        if (!mEncoderIsInited) return;
-//        NV21toI420SemiPlanar(buf, frame, 640, 480);
-        rotateAndToNV12(buf, yuv420sp, 640, 480);
+    byte[] yuv420sp = new byte[1920 * 1080 * 3 / 2];
+    byte[] buf;
+    public void encode() {
+
+        try {
+            buf = YUVQueue.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        rotateAndToNV12(buf, yuv420sp, 1920, 1080);
         buf = yuv420sp;
         ByteBuffer[] inputBuffers = mEncoder.getInputBuffers();
         ByteBuffer[] outputBuffers = mEncoder.getOutputBuffers();
@@ -118,6 +132,10 @@ public class MediaCodecHelper {
                 mEncoder.releaseOutputBuffer(outputBufferIndex, false);
             }
         }while (outputBufferIndex >= 0);
+        if (!mEncoderStarted) {
+            mediaMuxer.stop();
+            mediaMuxer.release();
+        }
     }
 
     private void rotateAndToNV12(byte[] nv21,byte[] nv12,int width,int height) {

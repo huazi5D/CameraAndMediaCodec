@@ -2,6 +2,7 @@ package hz.cameraandmediacodec;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -40,10 +41,14 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void onClick(View v) {
                 if (!mIsLuZhi) {
+                    mLuZhi.setText("结束录制");
+                    mLuZhi.setBackgroundColor(Color.argb(100, 96, 255, 64));
                     mIsLuZhi = true;
-                    mMediaCodecHelper.initEncoder(480, 640);
+                    mMediaCodecHelper.initEncoder(1080, 1920);
                     mCameraHelper.setMediaCodec(mMediaCodecHelper);
                 } else {
+                    mLuZhi.setText("录制");
+                    mLuZhi.setBackgroundColor(Color.argb(255, 96, 255, 64));
                     mIsLuZhi = false;
                     mMediaCodecHelper.stop();
                 }
