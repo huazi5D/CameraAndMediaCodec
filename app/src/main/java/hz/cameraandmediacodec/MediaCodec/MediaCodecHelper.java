@@ -41,6 +41,7 @@ public class MediaCodecHelper {
             mEncoder = MediaCodec.createEncoderByType("Video/avc");
 
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("Video/avc", w, h);
+            // 通过参数设置高中低码率
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, w * h * 5);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
@@ -104,29 +105,16 @@ public class MediaCodecHelper {
         int outputBufferIndex;
         do {
             outputBufferIndex = mEncoder.dequeueOutputBuffer(bufferInfo, 0);
-            if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+            if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {// 请求超时，没有数据就直接跳过
 
-            } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
-
-            } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+            } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {// 必须在此处启用混合器，否则报错
                 trackIndex = mediaMuxer.addTrack(mEncoder.getOutputFormat());
                 mediaMuxer.start();
-            } else if (outputBufferIndex < 0) {
-
-            } else {
+            } else { // 正常编码数据
                 ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
 
-                if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-                    bufferInfo.size = 0;
-                }
-
-                if (trackIndex == -1) {
-                    mediaMuxer.addTrack(mEncoder.getOutputFormat());
-                    mediaMuxer.start();
-                }
-
                 if (bufferInfo.size != 0) {
-                    bufferInfo.presentationTimeUs = System.nanoTime() / 1000;
+                    bufferInfo.presentationTimeUs = System.nanoTime() / 1000; // 设定时间戳 否则无法播放
                     mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 }
                 mEncoder.releaseOutputBuffer(outputBufferIndex, false);
