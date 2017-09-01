@@ -27,6 +27,7 @@ public class MediaCodecHelper {
     private int trackIndex = -1;
 
     public static ArrayBlockingQueue<byte[]> YUVQueue = new ArrayBlockingQueue<byte[]>(10);
+    public static ArrayBlockingQueue<ByteBuffer> AudioQueue = new ArrayBlockingQueue<ByteBuffer>(10);
 
     public MediaCodecHelper() {
         try {
