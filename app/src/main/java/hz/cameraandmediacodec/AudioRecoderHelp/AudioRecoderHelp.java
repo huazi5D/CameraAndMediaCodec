@@ -31,8 +31,8 @@ public class AudioRecoderHelp {
     private MediaMuxerHelp mMediaMuxer = MediaMuxerHelp.getInstanse();
 
     public AudioRecoderHelp() {
-        mMinBufferSize = AudioRecord.getMinBufferSize(16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        mAudioRecod = new AudioRecord(MediaRecorder.AudioSource.MIC, 16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mMinBufferSize);
+        mMinBufferSize = AudioRecord.getMinBufferSize(48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+        mAudioRecod = new AudioRecord(MediaRecorder.AudioSource.MIC, 48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mMinBufferSize);
         mAudioData = new byte[mMinBufferSize];
         mAudioRecod.startRecording();
     }
@@ -60,11 +60,9 @@ public class AudioRecoderHelp {
         try {
             mEncoder = MediaCodec.createEncoderByType("Audio/mp4a-latm");
 
-            MediaFormat mediaFormat = MediaFormat.createAudioFormat("Audio/mp4a-latm", 8000, 1);
-            mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 16000);
-            mediaFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, 8000);
+            MediaFormat mediaFormat = MediaFormat.createAudioFormat("Audio/mp4a-latm", 48000, 1);
+            mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 128000);
             mediaFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 1600);
             mEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             mEncoder.start();
             mEncoderStarted = true;
