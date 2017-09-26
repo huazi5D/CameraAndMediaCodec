@@ -8,8 +8,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.List;
 
-import hz.cameraandmediacodec.MediaCodec.MediaCodecHelper;
-
 import static android.content.ContentValues.TAG;
 import static hz.cameraandmediacodec.MediaCodec.MediaCodecHelper.YUVQueue;
 
@@ -22,14 +20,8 @@ public class CameraHelper implements Camera.PreviewCallback{
     private Camera mCamera;
     private Camera.Parameters mParameters = null;
     private int mBufferSize = -1;
-    private byte[] mBuffer;
-    private MediaCodecHelper mMediaCodecHelper;
 
     public CameraHelper() {
-    }
-
-    public void setMediaCodec(MediaCodecHelper mediaCodecHelper) {
-        this.mMediaCodecHelper = mediaCodecHelper;
     }
 
     public void startPreview(SurfaceTexture surfaceTexture) {
@@ -49,7 +41,6 @@ public class CameraHelper implements Camera.PreviewCallback{
 
             mBufferSize = mParameters.getPreviewSize().width * mParameters.getPreviewSize().height;
             mBufferSize *= ImageFormat.getBitsPerPixel(mParameters.getPreviewFormat()) / 8;
-            mBuffer = new byte[mBufferSize];
 
 //            mCamera.addCallbackBuffer(mBuffer);
             mCamera.setPreviewCallback(this);

@@ -19,6 +19,7 @@ public class MediaMuxerHelp {
     private MediaMuxer mMediaMuxer;
     private int mAudioTrackIndex = -1;
     private int mVideoTrackIndex = -1;
+    private boolean mIsStarted = false;
 
     public enum TrackType {
         AUDIO_TRACK, VIDEO_TRACK;
@@ -40,19 +41,33 @@ public class MediaMuxerHelp {
 
     public void addTrack(MediaFormat format, TrackType trackType) {
         if (trackType == TrackType.AUDIO_TRACK) {
-            mAudioTrackIndex = mMediaMuxer.addTrack(format);;
+            mAudioTrackIndex = mMediaMuxer.addTrack(format);
         } else if (trackType == TrackType.VIDEO_TRACK) {
-            mVideoTrackIndex = mMediaMuxer.addTrack(format);;
+            mVideoTrackIndex = mMediaMuxer.addTrack(format);
         }
 
     }
 
     public void start() {
-        if (mAudioTrackIndex != -1 && mVideoTrackIndex != -1)
+        if (mAudioTrackIndex != -1 && mVideoTrackIndex != -1) {
             mMediaMuxer.start();
+            mIsStarted = true;
+        }
+    }
+
+    public void stop(TrackType type) {
+        if (type == TrackType.VIDEO_TRACK)
+            mVideoTrackIndex = -1;
+        if (type == TrackType.AUDIO_TRACK)
+            mAudioTrackIndex = -1;
+        if (mVideoTrackIndex == -1 && mAudioTrackIndex == -1) {
+            mMediaMuxer.stop();
+            mMediaMuxer.release();
+        }
     }
 
     public void writeSampleData(TrackType type, ByteBuffer outputBuffer, MediaCodec.BufferInfo bufferInfo) {
+        if (!mIsStarted) return;
         int trackIndex = type == TrackType.AUDIO_TRACK ? mAudioTrackIndex : mVideoTrackIndex;
         mMediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
     }

@@ -3,14 +3,13 @@ package hz.cameraandmediacodec.MediaCodec;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
-import android.media.MediaMuxer;
 import android.view.Surface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import hz.cameraandmediacodec.utils.SDCardUtils;
+import hz.cameraandmediacodec.MediaMuxer.MediaMuxerHelp;
 
 /**
  * Created by Administrator on 2017-06-27.
@@ -22,19 +21,13 @@ public class MediaCodecHelper {
     private MediaCodec mDecoder = null;
 
     private boolean mEncoderStarted = false;
-    private boolean mDecoderIsInited = false;
-    private MediaMuxer mediaMuxer;
+    private MediaMuxerHelp mediaMuxer;
     private int trackIndex = -1;
 
     public static ArrayBlockingQueue<byte[]> YUVQueue = new ArrayBlockingQueue<byte[]>(10);
-    public static ArrayBlockingQueue<ByteBuffer> AudioQueue = new ArrayBlockingQueue<ByteBuffer>(10);
 
     public MediaCodecHelper() {
-        try {
-            mediaMuxer = new MediaMuxer(SDCardUtils.getSDCardPath() + ".123/out.mp4", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mediaMuxer = MediaMuxerHelp.getInstanse();
     }
 
     public boolean initEncoder(int w, int h) {
@@ -109,21 +102,20 @@ public class MediaCodecHelper {
             if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {// 请求超时，没有数据就直接跳过
 
             } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {// 必须在此处启用混合器，否则报错
-                trackIndex = mediaMuxer.addTrack(mEncoder.getOutputFormat());
+                mediaMuxer.addTrack(mEncoder.getOutputFormat(), MediaMuxerHelp.TrackType.VIDEO_TRACK);
                 mediaMuxer.start();
             } else { // 正常编码数据
                 ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
 
                 if (bufferInfo.size != 0) {
                     bufferInfo.presentationTimeUs = System.nanoTime() / 1000; // 设定时间戳 否则无法播放
-                    mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
+                    mediaMuxer.writeSampleData(MediaMuxerHelp.TrackType.VIDEO_TRACK, outputBuffer, bufferInfo);
                 }
                 mEncoder.releaseOutputBuffer(outputBufferIndex, false);
             }
         }while (outputBufferIndex >= 0);
         if (!mEncoderStarted) {
-            mediaMuxer.stop();
-            mediaMuxer.release();
+            mediaMuxer.stop(MediaMuxerHelp.TrackType.VIDEO_TRACK);
         }
     }
 

@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import hz.cameraandmediacodec.AudioRecoderHelp.AudioRecoderHelp;
 import hz.cameraandmediacodec.Camera.CameraHelper;
 import hz.cameraandmediacodec.MediaCodec.MediaCodecHelper;
 import hz.cameraandmediacodec.View.CameraTextrueView;
@@ -22,6 +23,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Button mLuZhi;
     private boolean mIsLuZhi = false;
     private MediaCodecHelper mMediaCodecHelper;
+    private AudioRecoderHelp mAudioRecoderHelp;
     private SensorManager mSensorManager = null;
     private Sensor mSensor = null;
 
@@ -30,9 +32,9 @@ public class MainActivity extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mMediaCodecHelper = new MediaCodecHelper();
+        mAudioRecoderHelp = new AudioRecoderHelp();
 
         mCameraView = (CameraTextrueView) findViewById(R.id.video1);
-//        mCodecView  = (VideoViewSurfaceView) findViewById(R.id.video2);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
@@ -45,12 +47,14 @@ public class MainActivity extends Activity implements SensorEventListener {
                     mLuZhi.setBackgroundColor(Color.argb(100, 96, 255, 64));
                     mIsLuZhi = true;
                     mMediaCodecHelper.initEncoder(1080, 1920);
-                    mCameraHelper.setMediaCodec(mMediaCodecHelper);
+                    mAudioRecoderHelp.initEncoder();
+                    mAudioRecoderHelp.start();
                 } else {
                     mLuZhi.setText("录制");
                     mLuZhi.setBackgroundColor(Color.argb(255, 96, 255, 64));
                     mIsLuZhi = false;
                     mMediaCodecHelper.stop();
+                    mAudioRecoderHelp.stop();
                 }
             }
         });
