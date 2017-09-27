@@ -107,6 +107,17 @@ public class MediaCodecHelper {
             } else { // 正常编码数据
                 ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
 
+                /*int type = outputBuffer.get(4) & 0x1F;
+                if (type == 7 || type == 8) {
+                    Log.e(TAG, "------PPS、SPS帧(非图像数据)，忽略-------");
+                } else if (type == 5) {
+                    Log.e(TAG, "------I帧(关键帧)-------");
+                    Log.e(TAG, "----------->添加关键帧到混合器");
+                } else {
+                    Log.d(TAG, "------非I帧(type=1)，添加到混合器-------");
+                    Log.d(TAG, "------添加到混合器");
+                }*/
+
                 if (bufferInfo.size != 0) {
                     bufferInfo.presentationTimeUs = System.nanoTime() / 1000; // 设定时间戳 否则无法播放
                     mediaMuxer.writeSampleData(MediaMuxerHelp.TrackType.VIDEO_TRACK, outputBuffer, bufferInfo);
